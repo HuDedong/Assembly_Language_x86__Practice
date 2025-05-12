@@ -28,21 +28,221 @@ Click debug, select the window, select the register and memory
 Select memory, input & sum to view the result
 
 3. **Calculate (2^29 + 40) observe the result**
-
 4. **From the textbook(P92)**
-    **Data Definitions**
-    Write a program that contains a definition of each data type listed in Table 3-2 in Section 3.4.
-    Initialize each variable to a value that is consistent with its data type.
-
-  **Symbolic Integer Constants**
-  Write a program that defines symbolic constants for all of the days of the week. Create an array variable that uses the symbols as initializers.
-
-  **Symbolic Text Constants**
-  Write a program that defines symbolic names for several string literals (characters between quotes). Use each symbolic name in a variable definition.
+    1. Data Definitions**
+        Write a program that contains a definition of each data type listed in Table 3-2 in Section 3.4. Initialize each variable to a value that is consistent with its data type.
+    2. **Symbolic Integer Constants**
+          Write a program that defines symbolic constants for all of the days of the week. Create an array variable that uses the symbols as initializers.
+	3. **Symbolic Text Constants**
+        Write a program that defines symbolic names for several string literals (characters between quotes). Use each symbolic name in a variable definition.
 
 ---
 
 ### Solution(s):
+
+Sol 1:
+
+```assembly
+;AddTwo.asm -add two 32 bit integers
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+var1 DWORD 1
+var2 DWORD 2
+sum DWORD ?
+.code
+main PROC
+	mov eax,val1
+	add eax,val2
+	mov sum,eax
+	INVOKE ExitProcess,0
+main ENDP
+END main
+```
+
+Sol 2:
+
+```assembly
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+val1 DWORD 1h
+val2 DWORD 2h
+val3 DWORD 3h
+sum DWORD ?
+.code
+main PROC
+	mov eax,val1
+	add eax,val2
+	sub eax,val3
+	mov sum,eax
+	INVOKE ExitProcess,0
+main ENDP
+END main
+```
+
+Sol 3:
+
+```assembly
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+.data
+result DWORD ?
+.code
+main PROC
+	mov eax,1
+	shl eax,29
+	add eax,40
+	mov result,eax
+	INVOKE ExitProcess,0
+main ENDP
+END main
+```
+
+Sol 4.1:
+
+你需要根据这个表格来在程序中分别定义每一种数据类型并初始化一个合理的值。
+
+Table 3-2 包含的数据类型与释义
+
+| 名称   | 宽度   | 用法/含义与备注                              |
+| ------ | ------ | -------------------------------------------- |
+| BYTE   | 8-bit  | 无符号字节 (B=byte)                          |
+| SBYTE  | 8-bit  | 有符号字节 (S=signed)                        |
+| WORD   | 16-bit | 无符号字、可作实模式“近”指针                 |
+| SWORD  | 16-bit | 有符号字                                     |
+| DWORD  | 32-bit | 无符号双字，可为保护模式“近”指针             |
+| SDWORD | 32-bit | 有符号双字                                   |
+| FWORD  | 48-bit | 仅整数（实际上常用于“远”指针）               |
+| QWORD  | 64-bit | 四字（整数）                                 |
+| TBYTE  | 80-bit | 十字节整数 (T=Ten-byte)，有时用于保存FPU数据 |
+| REAL4  | 32-bit | 短实数（4字节IEEE浮点）                      |
+| REAL8  | 64-bit | 长实数（8字节IEEE浮点）                      |
+| REAL10 | 80-bit | 扩展实数（10字节IEEE浮点）                   |
+
+```assembly
+.data
+    ; 8位无符号整数
+    var_byte    DB      128         ; (0 ~ 255)
+
+    ; 8位有符号整数
+    var_sbyte   DB      -64         ; (-128 ~ 127)
+
+    ; 16位无符号整数
+    var_word    DW      30000       ; (0 ~ 65535)
+
+    ; 16位有符号整数
+    var_sword   DW      -12345      ; (-32768 ~ 32767)
+
+    ; 32位无符号整数
+    var_dword   DD      4000000000  ; (0 ~ 4294967295)
+
+    ; 32位有符号整数
+    var_sdword  DD      -2000000000 ; (-2147483648 ~ 2147483647)
+
+    ; 48位“远”指针/整数
+    var_fword   DF      123456789ABC ; 48位可记为6字节，写法如：DF 12 34 56 78 9A BC
+
+    ; 64位整数
+    var_qword   DQ      1234567890123456789
+
+    ; 80位整数/10字节（通常用于FPU数据）
+    var_tbyte   DT      1000000000000000000 ; 一般用来持有大整数或FPU堆栈数据
+
+    ; 32位IEEE短实数 (float)
+    var_real4   DD      3.14   ; 单精度
+
+    ; 64位IEEE长实数 (double)
+    var_real8   DQ      3.14159265358979   ; 双精度
+
+    ; 80位IEEE扩展实数
+    var_real10  DT      2.718281828459045235 ; 扩展精度
+.code
+end
+```
+
+Sol 4.2:
+
+```assembly
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+SUNDAY     = 0 ; SUNDAY EQU 0 是更常见的写法
+MONDAY     = 1
+TUESDAY    = 2
+WEDNESDAY  = 3
+THURSDAY   = 4
+FRIDAY     = 5
+SATURDAY   = 6
+; 常量定义在 .data 之前
+.data	
+	daysOfWeek BYTE SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
+.code
+main PROC
+	; 如果你还没学 Loop，可以先不做下面遍历
+	mov ecx,7
+	mov esi,OFFSET daysOfWeek
+	L1:
+		mov al,esi
+		; add al,'0' 把al内数字转成ASCII字符，再INVOKE stdOut打印，繁琐不展示了
+		add,esi TYPE daysOfWeek
+		loop L1 ; 自动做ecx -= 1, 当ecx == 0时自动退出
+
+	INVOKE ExitProcess,0
+main ENDP
+END main
+```
+
+daysOfWeek 的注意事项：
+
+1. 用 BYTE 不用 DWORD，因为 BYTE 才是常量，DWORD 定义的是能被别人修改的（本质还是变量）
+
+2. “数组”末尾要不要加 `,0` 的问题**一句话总结：用LOOP等循环次数已知，不必加 ,0；用0结尾表示内容终止时，才需要 ,0** ，注意两种情况都要用 Loop 搭配 index of source： `esi, OFFSET myArray` 来先指向数组开头，然后移动
+
+    1. 知道循环次数时 `LOOP` 不需要 `,0`
+    - `LOOP` 指令用的是 ECX（或 CX）寄存器计数：你只要**事先知道要循环几次**（比如7次），
+    - ECX 设为7，`LOOP` 每次自动减1，到0跳出，
+    - **数据数组不需要额外加结尾0来判断是否结束**。
+    
+    2. 用`ecx`配合 LOOP “查找0结尾”数组，才需要 `,0`
+    
+        有些情况下，你想**遍历一个变长数组**，以 0 为“终止符”，
+    
+        - 就像 C 字符串用 `NULL` 做结尾一样，
+        - 这时，需要数组最后加一个 0，
+        - 有时`ecx`只是临时变量，不同作用——不是固定循环计数，而是配合查找结尾。
+
+Sol 4.3:
+
+```assembly
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess PROTO, dwExitCode:DWORD
+
+; 定义符号名，对应字符串字面量
+HELLO_TEXT  EQU <"Hello",0> ; 用 < > 避免读取错误，EQU 比 = 更正式
+WORLD_TEXT  EQU <"World!",0>
+AUTHOR_TEXT EQU <"YourName",0>
+; 常量定义在 .data 之前
+.data	
+	str1 BYTE HELLO_TEXT
+	str2 BYTE WORLD_TEXT
+	str3 BYTE AUTHOR_TEXT
+	
+; 后面省略了
+```
 
 
 
@@ -104,7 +304,116 @@ In comments next to each instruction, write the hexadecimal value of EAX. Insert
 
 ### Solution(s):
 
+Sol 1:
 
+```assembly
+;.386
+;.model flat,stdcall
+;.stack 4096
+;ExitProcess PROTO, dwExitCode:DWORD
+INCLUDE Irvine32.inc
+.data
+	;var1 DWORD 0FFFFh ; 虽然这个例子没用，但是不加前置0也会报错！
+	var1 DWORD 0FFFFFFFFh ; 哪怕有8个F了，还是要前置 0 后置 h
+.code
+main PROC
+	mov eax,var1 ; 不能用 ax，会报错，因为 16-bit 和 DWORD(32-bit) 不匹配
+	call DumpRegs
+
+	add eax,1h
+	call DumpRegs
+
+	sub eax,2h
+	call DumpRegs
+
+	INVOKE ExitProcess,0
+main ENDP
+END main
+```
+输出如下：可见 CF = 0 和 CF = 1 的变化
+
+```
+  EAX=FFFFFFFF  EBX=008B7000  ECX=000510AA  EDX=000510AA
+  ESI=000510AA  EDI=000510AA  EBP=00AFFC64  ESP=00AFFC58
+  EIP=0005366A  EFL=00000246  CF=0  SF=0  ZF=1  OF=0  AF=0  PF=1
+
+
+  EAX=00000000  EBX=008B7000  ECX=000510AA  EDX=000510AA
+  ESI=000510AA  EDI=000510AA  EBP=00AFFC64  ESP=00AFFC58
+  EIP=00053672  EFL=00000257  CF=1  SF=0  ZF=1  OF=0  AF=1  PF=1
+
+
+  EAX=FFFFFFFE  EBX=008B7000  ECX=000510AA  EDX=000510AA
+  ESI=000510AA  EDI=000510AA  EBP=00AFFC64  ESP=00AFFC58
+  EIP=0005367A  EFL=00000293  CF=1  SF=1  ZF=0  OF=0  AF=1  PF=0
+
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 5580)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+```
+
+Sol 2:
+
+
+```assembly
+```
+
+
+Sol 3:
+
+```assembly
+;.386
+;.model flat,stdcall
+;.stack 4096
+;ExitProcess PROTO, dwExitCode:DWORD
+INCLUDE Irvine32.inc
+
+.data
+    var1 DWORD 7FFFFFFFh ; 最大的 32 位有符号正整数
+
+.code
+main PROC
+    mov eax, var1       ; 载入最大正整数到 EAX
+    add eax, 1          ; 这将导致结果超出最大正整数，设置溢出标志 OF
+    call DumpRegs       ; 显示寄存器状态，观测 OF 是否被设置
+
+    INVOKE ExitProcess, 0
+main ENDP
+END main
+```
+输出如下：可见 OF = 1
+
+```
+
+  EAX=80000000  EBX=00746000  ECX=002310AA  EDX=002310AA
+  ESI=002310AA  EDI=002310AA  EBP=008FFC60  ESP=008FFC54
+  EIP=0023366D  EFL=00000A96  CF=0  SF=1  ZF=0  OF=1  AF=1  PF=1
+
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 7832)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+```
+
+Sol 4:
+
+```assembly
+
+```
+
+Sol 5:
+
+```assembly
+```
+Sol 6:
+
+```assembly
+```
+Sol 7:
+
+```assembly
+```
 
 ---
 
