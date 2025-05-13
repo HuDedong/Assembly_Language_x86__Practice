@@ -281,14 +281,14 @@ Next, write instructions that use direct-offset addressing to move the four valu
 EAX=FFFFFFFF EBX=FFFFFFFE ECX=FFFFFFFD EDX=FFFFFFFC
 ```
 
-5. Reverse an Array  
+5. Reverse an Array  ==经典好题，二分优化 反转数组==
 Use a loop with indirect or indexed addressing to reverse the elements of an integer array in place. Do not copy the elements to any other array. Use the SIZEOF, TYPE, and LENGTHOF operators to make the program as flexible as possible if the array size and type should be changed in the future. Optionally, you may display the modified array by calling the DumpMem method from the Irvine32 library. See Chapter 5 for details. (A VideoNote for this exercise is posted on the Web site.)
-
-6. Fibonacci Numbers  
+6. Fibonacci Numbers  ==经典斐波那契==，此题开始我就正式地用 INCLUDE Irvine32.inc 了哈
 Write a program that uses a loop to calculate the first seven values of the Fibonacci number sequence, described by the following formula: Fib(1) = 1, Fib(2) = 1, Fib(n) = Fib(n − 1) + Fib(n − 2). Place each value in the EAX register and display it with a `call DumpRegs` statement (see Section 3.2) inside the loop.
 
 7. Arithmetic Expression  
 Write a program that implements the following arithmetic expression:
+
 ```
 EAX = -val2 + 7 - val3 + val1
 ```
@@ -299,6 +299,23 @@ val2 SDWORD -15
 val3 SDWORD 20
 ```
 In comments next to each instruction, write the hexadecimal value of EAX. Insert a `call DumpRegs` statement at the end of the program.
+
+==The new template is as follows==
+
+```assembly
+INCLUDE Irvine32.inc
+	; Constant
+.data
+    ; declare variables here
+
+.code
+main PROC
+    ; write your code here
+    exit ; 不用INVOKE ExitProcess,0
+main ENDP
+
+END main
+```
 
 ---
 
@@ -326,7 +343,7 @@ main PROC
 	sub eax,2h
 	call DumpRegs
 
-	INVOKE ExitProcess,0
+	exit
 main ENDP
 END main
 ```
@@ -357,8 +374,61 @@ Sol 2:
 
 
 ```assembly
+;.386
+;.model flat,stdcall
+;.stack 4096
+;ExitProcess PROTO, dwExitCode:DWORD
+INCLUDE Irvine32.inc
+
+.data
+    var1 DWORD 01h
+
+.code
+main PROC
+    mov eax, var1
+    call DumpRegs
+
+    sub eax, 01h
+    call DumpRegs
+
+    sub eax, 01h
+    call DumpRegs
+
+    add eax, 03h
+    call DumpRegs
+
+    exit
+main ENDP
+END main
 ```
 
+输出如下：可见 ZF 和 SF 的变化
+
+```
+  EAX=00000001  EBX=00537000  ECX=003D10AA  EDX=003D10AA
+  ESI=003D10AA  EDI=003D10AA  EBP=0076F990  ESP=0076F984
+  EIP=003D366A  EFL=00000246  CF=0  SF=0  ZF=1  OF=0  AF=0  PF=1
+
+
+  EAX=00000000  EBX=00537000  ECX=003D10AA  EDX=003D10AA
+  ESI=003D10AA  EDI=003D10AA  EBP=0076F990  ESP=0076F984
+  EIP=003D3672  EFL=00000246  CF=0  SF=0  ZF=1  OF=0  AF=0  PF=1
+
+
+  EAX=FFFFFFFF  EBX=00537000  ECX=003D10AA  EDX=003D10AA
+  ESI=003D10AA  EDI=003D10AA  EBP=0076F990  ESP=0076F984
+  EIP=003D367A  EFL=00000297  CF=1  SF=1  ZF=0  OF=0  AF=1  PF=1
+
+
+  EAX=00000002  EBX=00537000  ECX=003D10AA  EDX=003D10AA
+  ESI=003D10AA  EDI=003D10AA  EBP=0076F990  ESP=0076F984
+  EIP=003D3682  EFL=00000213  CF=1  SF=0  ZF=0  OF=0  AF=1  PF=0
+
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 12948)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+```
 
 Sol 3:
 
@@ -378,7 +448,7 @@ main PROC
     add eax, 1          ; 这将导致结果超出最大正整数，设置溢出标志 OF
     call DumpRegs       ; 显示寄存器状态，观测 OF 是否被设置
 
-    INVOKE ExitProcess, 0
+    exit
 main ENDP
 END main
 ```
@@ -399,21 +469,321 @@ C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 7832)已�
 Sol 4:
 
 ```assembly
+;.386
+;.model flat,stdcall
+;.stack 4096
+;ExitProcess PROTO, dwExitCode:DWORD
+INCLUDE Irvine32.inc
+
+.data
+Uarray WORD 1000h,2000h,3000h,4000h
+Sarray SWORD -1,-2,-3,-4
+
+.code
+main PROC
+    ; mov esi,OFFSET Uarray 先让指针指向 Uarray 的起始位置
+    ; movzx eax, [esi]        ; EAX = 00001000
+    ; movzx ebx, [esi+2]      ; EBX = 00002000
+    ; movzx ecx, [esi+4]      ; ECX = 00003000
+    ; movzx edx, [esi+6]      ; EDX = 00004000
+
+    movzx eax,Uarray[0] ; 如果用 mov 则不能用eax！！英文左右 size 必须一样！但是题目想让我们高位补 0， 那我就用movzx了
+    movzx ebx,Uarray[2]
+    movzx ecx,Uarray[4]
+    movzx edx,Uarray[6]
+    call DumpRegs
+
+    movsx eax,Sarray[0]
+    movsx ebx,Sarray[2]
+    movsx ecx,Sarray[4]
+    movsx edx,Sarray[6]
+    call DumpRegs
+
+    exit
+main ENDP
+END main
+```
+
+输出与题目要求一致：
 
 ```
+
+  EAX=00001000  EBX=00002000  ECX=00003000  EDX=00004000
+  ESI=00F810AA  EDI=00F810AA  EBP=0053FB54  ESP=0053FB48
+  EIP=00F83681  EFL=00000246  CF=0  SF=0  ZF=1  OF=0  AF=0  PF=1
+
+
+  EAX=FFFFFFFF  EBX=FFFFFFFE  ECX=FFFFFFFD  EDX=FFFFFFFC
+  ESI=00F810AA  EDI=00F810AA  EBP=0053FB54  ESP=0053FB48
+  EIP=00F836A2  EFL=00000246  CF=0  SF=0  ZF=1  OF=0  AF=0  PF=1
+
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 25060)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+```
+
+**注意！！**
+
+用esi更适合配合循环读取很大的或数量不确定的数组，用esi而不是直接索引读数组时：
+
+==用movzx或movsx	而不是mov！！==
+
+- `movzx eax, word ptr [esi]`
+    只取2字节（16位），**高位补0**，适合无符号数。
+- `movsx eax, word ptr [esi]`
+    只取2字节（16位），**高位补符号位**，适合有符号数。
+
+- **如果你用 `mov eax, [esi]`，会多读2字节，结果不对。**
+- **如果你用 `mov ax, [esi]`，只会影响16位，EAX高16位保持原值，也不是题目想要的效果。**
+- **用 `movzx` 或 `movsx`，能保证EAX等寄存器的值和题目要求完全一致。**
+
+
 
 Sol 5:
 
 ```assembly
+;.386
+;.model flat,stdcall
+;.stack 4096
+;ExitProcess PROTO, dwExitCode:DWORD
+INCLUDE Irvine32.inc
+
+.data
+array DWORD 1, 2, 3, 4, 5
+
+.code
+main PROC
+    mov esi,OFFSET array ; index of source points to array[first]
+    mov edi,OFFSET array + SIZEOF array - TYPE array ; index of destination points to array[last]
+    ; SIZEOF array - TYPE array means  
+    ; DWORD array: |1 2 3 4|5 7 6 8|9 10 11 12| we can get the "9th" from the memory
+    mov ecx, LENGTHOF array / 2 ; only need arrLen / 2 times loop
+    L1:
+        ; Swap left & right, remember add [] for esi & edi !!
+        mov eax,[esi] ; mov eax, array[esi]，something to notice
+        mov ebx,[edi] 
+        mov [esi],ebx
+        mov [edi],eax
+        ; [esi] is not esi, [edi] is not edi!
+
+        ; Move pointers
+        add esi, TYPE array ; add
+        sub edi, TYPE array ; sub
+        loop L1
+    ; DumpMem must clarify the parameters
+    ; call DumpMem Error!!! because did not clarify parameters
+    ; 我用中文注释了，无论用不用含ebx的交换方法，都要明确下面3个参数
+    mov esi, OFFSET array   ; 1. 数组起始地址
+    mov ecx, LENGTHOF array ; 2. 元素数量
+    mov ebx, TYPE array     ; 3. 每个元素大小（DWORD=4）
+    call DumpMem            ; 调用 DumpMem 显示内存
+
+    exit
+main ENDP
+END main
+; Swap left & right 这种更好理解，不用 ebx 了
+; mov eax, [esi]
+; xchg eax, [edi]  ; 交换 eax 和 [edi], xchg 要求必须 >= 一方是寄存器
+; mov [esi], eax
 ```
+- **`mov eax, [esi]`**：适用于 `esi` 是绝对地址（指针）。
+- **`mov eax, array[esi]`**：适用于 `esi` 是相对于数组首地址的字节偏移量（索引）。
+
+输出如下（reversed）：
+
+```
+
+Dump of offset 00A76000
+-------------------------------
+00000005  00000004  00000003  00000002  00000001
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 23660)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+```
+
+
+
 Sol 6:
 
-```assembly
-```
-Sol 7:
+核心：
 
 ```assembly
+; 假设 L1 代表 第一轮循环
+; 初始	     交换↓ L1     交换↓ L2
+; eax = 1    1+1=2 ->1    1+2=3 ->2
+; ebx = 1        1 ->2        2 ->3
+
+; n 从 3 涨到 7
+add eax, ebx ; eax先加ebx到第三个数: 2
+call WriteInt ; 打印
+call Crlf ; 换行
+xchg ebx, eax ; ebx变成2，eax回退到ebx的值（不是位置！）
+; 上面理解不了的话看下面
+; 1 1 2 3
+; a b
+;   a b 第一轮做完后
 ```
+
+简洁版：
+
+```assembly
+INCLUDE Irvine32.inc
+
+.data
+
+.code
+main PROC
+    mov eax,1
+    mov ebx,1
+    mov ecx,5 ; 计数器勿忘
+    call WriteInt ; +1 Fib(1)
+    call Crlf
+    mov eax,ebx
+    call WriteInt ; +1 Fib(2)
+    call Crlf
+    L1:
+        add eax,ebx
+        call WriteInt ; Fib(3-7)
+        call Crlf
+        xchg eax,ebx
+        loop L1
+    exit
+main ENDP
+END main
+```
+
+详解版：
+
+```assembly
+INCLUDE Irvine32.inc
+
+.data
+
+.code
+main PROC
+    ; 初始化前两个斐波那契数
+    mov eax, 1      ; Fib(1) = 1
+    mov ebx, 1      ; Fib(2) = 1
+
+    call WriteInt   ; 显示第一个数
+    call Crlf
+
+    mov eax, ebx    ; 把 ebx mov给 eax 才能显示第二个数
+    call WriteInt   
+    call Crlf
+    
+    mov ecx, 5      ; count 剩余需要计算的数量（Fib3-Fib7）
+
+L1:
+    ; 计算新值
+    add eax, ebx    ; eax = Fib(n)
+    call WriteInt   ; 显示当前 eax 内的数
+    call Crlf
+    
+    ; 更新寄存器状态
+    ; xchg 换的是值而不是地址！！
+    xchg eax, ebx   ; ebx = Fib(n), eax = Fib(n-1)
+    loop L1
+    
+    exit
+main ENDP
+END main
+```
+输出：
+
+```
++1
++1
++2
++3
++5
++8
++13
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 31824)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+```
+
+
+
+Sol 7:
+
+在汇编语言中，**SDWORD (Signed Double Word)** 表示 **32位有符号整数**，因此所有数值都必须用32位二进制表示。
+
+==求 -15 的十六进制表示==
+
+**步骤1：取15的二进制**
+
+```
+0000 0000 0000 0000 0000 0000 0000 1111 (二进制32位) 0x0000000F (十六进制)
+```
+
+**步骤2：按位取反（NOT运算）**
+
+```
+1111 1111 1111 1111 1111 1111 1111 0000  (0xFFFFFFF0)
+```
+
+**步骤3：加1（Two's Complement规则）**
+
+```
+1111 1111 1111 1111 1111 1111 1111 0000  
++                                     1
+---------------------------------------
+1111 1111 1111 1111 1111 1111 1111 0001  (0xFFFFFFF1)
+```
+
+32位分成8份，每份对应一个十六进制数 ↑ 
+
+==先填**低**位再填**高**位，如 **20decimal 是 00000014h** 而不是 000000F5h==
+
+**最终结果**
+
+- **-15的二进制**：`1111 1111 1111 1111 1111 1111 1111 0001`（32位）
+- **-15的十六进制**：`0xFFFFFFF1`
+
+```assembly
+INCLUDE Irvine32.inc
+.data
+	val1 SDWORD 8 ; 00000008h
+	val2 SDWORD -15 ; FFFFFFF1h
+	val3 SDWORD 20 ; 00000014h
+.code
+main PROC
+	; 求 EAX = -val2 + 7 - val3 + val1 都是些十进制的值
+	; 额外要求：在每条指令旁的注释中，写出 EAX 的十六进制值。在程序末尾插入 “调用 DumpRegs ”语句。
+	mov eax,val2  ; EAX = val2 = FFFFFFF1h (-15)
+	neg eax		  ; EAX = -EAX = 0000000Fh (15)
+	add eax,7	  ; EAX = 0x0000000F + 7 = 00000016h (22) 不是17h哦！ 
+	sub eax,val3  ; EAX = 0x00000016 - 0x00000014 = 0x00000002 (2)
+	add eax,val1  ; EAX = 0x00000002 + 0x00000008 = 0x0000000A (10)
+	call DumpRegs ; 验证我算对没
+	
+	exit
+main ENDP
+END main
+
+```
+
+算对了：
+
+```
+
+  EAX=0000000A  EBX=007EE000  ECX=005210AA  EDX=005210AA
+  ESI=005210AA  EDI=005210AA  EBP=0040FF68  ESP=0040FF5C
+  EIP=0052367B  EFL=00000206  CF=0  SF=0  ZF=0  OF=0  AF=0  PF=1
+
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 30140)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+
+```
+
+
 
 ---
 
