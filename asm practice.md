@@ -1,3 +1,7 @@
+# 汇编语言 x86 练习题解
+
+计科2302胡德东
+
 ## Irvine32注意事项
 
 
@@ -912,11 +916,11 @@ Programming Exercises P178
 
 ---
 
-1. Draw Text Colors
+1. Draw Text Colors ==不会考==
     Write a program that displays the same string in four different colors, using a loop. Call the Set-TextColor procedure from the book’s link library. Any colors may be chosen, but you may find it easiest to change the foreground color.
 
 
-3. Simple Addition (1)  
+3. Simple Addition (1)  ==不会考==
     Write a program that clears the screen, locates the cursor near the middle of the screen, prompts the user for two integers, adds the integers, and displays their sum.  
 
 
@@ -930,10 +934,10 @@ call BetterRandomRange
 ```
 Write a short test program that calls BetterRandomRange from a loop that repeats 50 times. Display each randomly generated value.  
 
-6. Random Strings  ==真是个好题目！看完解你就知道了！==
+6. Random Strings  <font style=background:#00C49F>真是个好题目！看完解你就知道了！</font>
 Write a program that generates and displays 20 random strings, each consisting of 10 capital letters {A..Z}. (A VideoNote for this exercise is posted on the Web site.)  
 
-7. Random Screen Locations  **很好玩，但是期末手写肯定不考，所以不用复习这题**
+7. Random Screen Locations  ==很好玩，但是期末手写肯定不考，所以不用复习这题==
 Write a program that displays a single character at 100 random screen locations, using a timing delay of 100 milliseconds. Hint: Use the GetMaxXY procedure to determine the current size of the console window.
 
 ---
@@ -1344,7 +1348,7 @@ Note: The Random32 procedure from the Irvine32 library generates random integers
 
 
 
-8. Boolean Calculator (2)
+8. Boolean Calculator (2) ==不会考==
 
 Continue the solution program from the preceding exercise by implementing the following procedures:
 
@@ -1358,7 +1362,7 @@ Continue the solution program from the preceding exercise by implementing the fo
 
 
 
-11. Message Encryption 
+11. Message Encryption ==不会考==
 
 Revise the encryption program in Section 6.3.4 in the following manner: Let the user enter an encryption key consisting of multiple characters. Use this key to encrypt and decrypt the plain-text by XORing each character of the key against a corresponding byte in the message. Repeat the key as many times as necessary until all plain-text bytes are translated. Suppose, for example, the key equals "ABXmv#7". This is how the key would align with the plain-text bytes:
 
@@ -1878,7 +1882,7 @@ Using the solution program from the preceding exercise as a starting point, add 
 - Accumulate a counter of the number of test scores.
 - Perform range checking on the user’s input: Display an error message if the test score is less than 0 or greater than 100. (A VideoNote for this exercise is posted on the Web site.)
 
-9. Probabilities and Colors
+9. Probabilities and Colors ==不会考==
 Write a program that randomly chooses among three different colors for displaying text on the screen. Use a loop to display 20 lines of text, each with a randomly chosen color. The probabilities for each color are to be as follows: white = 30%, blue = 10%, green = 60%. Hint: Generate a random integer between 0 and 9. If the resulting integer is in the range 0 to 2, choose white. If the integer equals 3, choose blue. If the integer is in the range 4 to 9, choose green. (A VideoNote for this exercise is posted on the Web site.)
 
 10. Print Fibonacci until Overflow
@@ -2037,10 +2041,11 @@ Your grade: C
 
 ==挺有意思的，和 switch case 很像，我不是很熟悉==
 
+用法 EDX：字符串、字符数组；EDI：数组
+
+==用 **WriteString** 一定是强绑定 **EDX** 的，换成 EDI 就是无法正常运行==
+
 ```assembly
-.386
-.model flat,stdcall
-.stack 4096
 INCLUDE Irvine32.inc
 
 .data
@@ -2055,7 +2060,7 @@ prompt BYTE "Enter your test score (0~100): ", 0
 .code
 main PROC
     ; 提示并读取成绩
-    mov edx, OFFSET prompt
+    mov edx, OFFSET prompt ; EDX：字符串、字符数组；EDI：数组
     call WriteString
     call ReadInt
     mov score, eax     ; 保存输入分数
@@ -2100,38 +2105,348 @@ END main
 Sol 4:
 
 ```assembly
+INCLUDE Irvine32.inc
+
+.data
+    score       DWORD ?
+    count       DWORD 0
+
+    prompt      BYTE "Enter your test score (0~100) or -1 to quit: ", 0
+    errRange    BYTE "  Error: score must be 0~100 (or -1 to quit)", 0
+
+    gradeA      BYTE "  Your grade: A", 0
+    gradeB      BYTE "  Your grade: B", 0
+    gradeC      BYTE "  Your grade: C", 0
+    gradeD      BYTE "  Your grade: D", 0
+    gradeF      BYTE "  Your grade: F", 0
+
+    totalMsg    BYTE "Number of valid scores entered: ", 0
+
+.code
+main PROC
+    call Clrscr
+
+input_loop:
+    mov edx, OFFSET prompt
+    call WriteString
+    call ReadInt
+    mov score, eax
+
+    cmp score, -1
+    je show_total
+
+    cmp score, 0
+    jl out_of_range
+    cmp score, 100
+    jg out_of_range
+
+    inc count
+
+    mov eax, score
+    cmp eax, 90
+    jge grade_A
+    cmp eax, 80
+    jge grade_B
+    cmp eax, 70
+    jge grade_C
+    cmp eax, 60
+    jge grade_D
+
+    mov edx, OFFSET gradeF
+    jmp show
+
+grade_A:
+    mov edx, OFFSET gradeA
+    jmp show
+grade_B:
+    mov edx, OFFSET gradeB
+    jmp show
+grade_C:
+    mov edx, OFFSET gradeC
+    jmp show
+grade_D:
+    mov edx, OFFSET gradeD
+
+show:
+    call WriteString
+    call Crlf
+    jmp input_loop
+
+out_of_range:
+    mov edx, OFFSET errRange
+    call WriteString
+    call Crlf
+    jmp input_loop
+
+show_total:
+    call Crlf
+    mov edx, OFFSET totalMsg
+    call WriteString
+    mov eax, count
+    call WriteInt
+    call Crlf
+    exit
+main ENDP
+
+END main
 
 ```
 
 输出:
 
 ```
+Enter your test score (0~100) or -1 to quit: 123
+  Error: score must be 0~100 (or -1 to quit)
+Enter your test score (0~100) or -1 to quit: 12
+  Your grade: F
+Enter your test score (0~100) or -1 to quit: 3
+  Your grade: F
+Enter your test score (0~100) or -1 to quit: 88
+  Your grade: B
+Enter your test score (0~100) or -1 to quit: 9
+  Your grade: F
+Enter your test score (0~100) or -1 to quit: 0
+  Your grade: F
+Enter your test score (0~100) or -1 to quit: 100
+  Your grade: A
+Enter your test score (0~100) or -1 to quit: 00
+  Your grade: F
+Enter your test score (0~100) or -1 to quit: 99
+  Your grade: A
+Enter your test score (0~100) or -1 to quit: 546
+  Error: score must be 0~100 (or -1 to quit)
+Enter your test score (0~100) or -1 to quit: 56
+  Your grade: F
+Enter your test score (0~100) or -1 to quit: 75
+  Your grade: C
+Enter your test score (0~100) or -1 to quit: 95
+  Your grade: A
+Enter your test score (0~100) or -1 to quit: 74
+  Your grade: C
+Enter your test score (0~100) or -1 to quit: 65
+  Your grade: D
+Enter your test score (0~100) or -1 to quit: ^A
+ <invalid integer>
+  Your grade: F
+Enter your test score (0~100) or -1 to quit: -1
+
+Number of valid scores entered: +14
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 17628)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
 ```
 
 
 
 Sol 9:
 
+概率与颜色
+编写一个程序，在屏幕上显示文字时随机选择三种不同的颜色。使用循环显示 20 行文字，每行随机选择一种颜色。每种颜色的概率如下：白色 = 30%，蓝色 = 10%，绿色 = 60%。
+
+==提示：随机生成一个 0 到 9 之间的整数。如果生成的整数在 0 到 2 之间，则选择白色。如果整数等于 3，则选择蓝色。如果整数在 4 到 9 之间，选择绿色。==
+
+
+
+🎯 说明：
+
+- 使用 `RandomRange` 限制随机数在 0~9。
+- 判断：
+    - 0~2：白色（30%）
+    - 3：蓝色（10%）
+    - 4~9：绿色（60%）
+- 用 `SetTextColor` 设置输出颜色，前景为文字色，背景为浅灰。
+
 ```assembly
+INCLUDE Irvine32.inc
+
+.data
+    whiteText   BYTE "This is WHITE text", 0
+    blueText    BYTE "This is BLUE text", 0
+    greenText   BYTE "This is GREEN text", 0
+
+.code
+main PROC
+    call Randomize         ; 初始化随机数种子
+
+    mov ecx, 20            ; 显示 20 行
+
+displayLoop:
+    ; 生成 0~9 随机数
+    mov eax, 10
+    call RandomRange       ; eax = 0 ~ 9
+
+    cmp eax, 3
+    je blue_color          ; eax = 3 → 蓝色 (10%)
+
+    cmp eax, 3
+    jl white_color         ; eax = 0~2 → 白色 (30%)
+
+    ; 否则 → 绿色 (60%)
+    jmp green_color
+
+white_color:
+    mov eax, white + (black * 16)     ; 前景白，背景黑
+    call SetTextColor
+    mov edx, OFFSET whiteText
+    call WriteString
+    call Crlf
+    loop displayLoop
+    jmp done
+
+blue_color:
+    mov eax, blue + (black * 16)      ; 前景蓝，背景黑
+    call SetTextColor
+    mov edx, OFFSET blueText
+    call WriteString
+    call Crlf
+    loop displayLoop
+    jmp done
+
+green_color:
+    mov eax, green + (black * 16)     ; 前景绿，背景黑
+    call SetTextColor
+    mov edx, OFFSET greenText
+    call WriteString
+    call Crlf
+    loop displayLoop
+    jmp done
+
+done:
+    mov eax, lightGray + (black * 16) ; 恢复默认颜色
+    call SetTextColor
+    exit
+main ENDP
+
+END main
 
 ```
 
 输出:
 
+不给你看颜色了，自己试试几次
+
 ```
+This is WHITE text
+This is GREEN text
+This is GREEN text
+This is GREEN text
+This is GREEN text
+This is WHITE text
+This is BLUE text
+This is GREEN text
+This is BLUE text
+This is GREEN text
+This is GREEN text
+This is WHITE text
+This is GREEN text
+This is WHITE text
+This is WHITE text
+This is GREEN text
+This is GREEN text
+This is GREEN text
+This is GREEN text
+This is GREEN text
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 17364)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
 ```
 
 
 
 Sol 10:
 
-```assembly
+==有必要会Fib()==
 
+```assembly
+INCLUDE Irvine32.inc
+
+.data
+	doneMsg BYTE "Overflow detected. Fibonacci sequence ended.", 0
+.code
+main PROC
+	mov eax, 1         ; Fib(1)
+    mov ebx, 1         ; Fib(2)
+	call WriteInt
+	call Crlf
+	call WriteInt
+	call Crlf
+
+fib_loop:
+	add eax, ebx       ; eax = eax + ebx (计算下一个数)
+    jc overflow_exit   ; 如果溢出，跳出循环 jump if carry flag was set
+	xchg eax, ebx
+	call WriteInt
+	call Crlf
+	jmp fib_loop
+
+overflow_exit:
+	call Crlf
+	mov edx, OFFSET doneMsg
+	call WriteString
+	call Crlf
+	exit
+main ENDP
+END main
 ```
 
 输出:
 
 ```
++1
++1
++1
++2
++3
++5
++8
++13
++21
++34
++55
++89
++144
++233
++377
++610
++987
++1597
++2584
++4181
++6765
++10946
++17711
++28657
++46368
++75025
++121393
++196418
++317811
++514229
++832040
++1346269
++2178309
++3524578
++5702887
++9227465
++14930352
++24157817
++39088169
++63245986
++102334155
++165580141
++267914296
++433494437
++701408733
++1134903170
++1836311903
+
+Overflow detected. Fibonacci sequence ended.
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 8236)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
 ```
 
 
@@ -2146,7 +2461,7 @@ Programming Exercises P267
 
 ---
 
-3. ShowFileTime  
+3. ShowFileTime  ==不会考==
 The time stamp of a MS-DOS file directory entry uses bits 0 through 4 for the number of 2-second increments, bits 5 through 10 for the minutes, and bits 11 through 15 for the hours (24-hour clock). For example, the following binary value indicates a time of 02:16:14, in hh:mm:ss format:  
 
 ```
@@ -2155,7 +2470,7 @@ The time stamp of a MS-DOS file directory entry uses bits 0 through 4 for the nu
 
 Write a procedure named ShowFileTime that receives a binary file time value in the AX register and displays the time in hh:mm:ss format.
 
-4. Encryption Using Rotate Operations  
+4. Encryption Using Rotate Operations  ==不会考==
 Write a program that performs simple encryption by rotating each plaintext byte a varying number of positions in different directions. For example, in the following array that represents the encryption key, a negative value indicates a rotation to the left and a positive value indicates a rotation to the right. The integer in each position indicates the magnitude of the rotation:
 
 ```
@@ -2187,3 +2502,220 @@ Implement this function in assembly language and write a test program that calls
 ---
 
 ### Solution(s):
+
+Sol 3:
+
+==会考我吃，看看下面的代码，真吓人==
+
+```assembly
+.386
+.model flat,stdcall
+.stack 4096
+INCLUDE Irvine32.inc
+
+.data
+    ; 无需额外数据段内容
+
+.code
+
+; ----------------------------------------
+; Print2DigitDec: 输出两位数字 (00–99)
+; 输入：EAX = 数值 (0–99)
+; ----------------------------------------
+Print2DigitDec PROC
+    push edx
+    push ecx
+
+    mov edx, 0
+    mov ecx, 10
+    div ecx             ; EAX / 10, EAX=十位, EDX=个位
+
+    add al, '0'
+    call WriteChar
+
+    mov al, dl
+    add al, '0'
+    call WriteChar
+
+    pop ecx
+    pop edx
+    ret
+Print2DigitDec ENDP
+
+
+; ----------------------------------------
+; ShowFileTime: 解析 DOS 文件时间格式并输出为 hh:mm:ss
+; 输入：AX = DOS 文件时间 (bits: 15-11 = hour, 10-5 = min, 4-0 = sec/2)
+; ----------------------------------------
+ShowFileTime PROC
+    movzx ecx, ax
+    shr   ecx, 11        ; hours
+
+    movzx ebx, ax
+    shr   ebx, 5
+    and   ebx, 3Fh       ; minutes
+
+    movzx edx, ax
+    and   edx, 1Fh
+    shl   edx, 1         ; seconds = low 5 bits * 2
+
+    mov eax, ecx
+    call Print2DigitDec
+    mov al, ':'
+    call WriteChar
+
+    mov eax, ebx
+    call Print2DigitDec
+    mov al, ':'
+    call WriteChar
+
+    mov eax, edx
+    call Print2DigitDec
+
+    ret
+ShowFileTime ENDP
+
+
+; ----------------------------------------
+; main 函数，调用测试
+; ----------------------------------------
+main PROC
+    call Clrscr
+
+    mov ax, 1207h   ; 02:16:14 正确的 DOS 时间编码，
+    call ShowFileTime
+
+    call Crlf
+    exit
+main ENDP
+
+END main
+
+```
+
+输出:
+
+```
+02:16:14
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 11556)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . . 
+```
+
+
+
+Sol 4:
+
+懒得写，不会考
+
+Sol 6:
+
+好题，但90行，不会期末考
+
+```assembly
+INCLUDE Irvine32.inc
+
+.data
+    msg1 BYTE "GCD(48, 18) = ", 0
+    msg2 BYTE "GCD(100, 75) = ", 0
+    msg3 BYTE "GCD(-42, 56) = ", 0
+
+.code
+
+; ----------------------------------------
+; Abs: 获取 EAX 的绝对值
+; 输出: EAX = 绝对值
+; ----------------------------------------
+Abs PROC
+    test eax, eax      ; 判断是否为负
+    jns notNegative    ; 如果是正数，跳过
+    neg eax            ; 取相反数
+notNegative:
+    ret
+Abs ENDP
+
+; ----------------------------------------
+; GCD PROC
+; 输入: EAX = x, EBX = y
+; 输出: EAX = GCD(x, y)
+; ----------------------------------------
+GCD PROC
+    ; 取 x 的绝对值
+    call Abs
+    mov ecx, eax    ; ecx = abs(x)
+
+    mov eax, ebx    ; eax = y
+    call Abs
+    mov ebx, eax    ; ebx = abs(y)
+
+    mov eax, ecx    ; eax = abs(x)
+
+L1:
+    cmp ebx, 0
+    je Done
+    mov edx, 0
+    div ebx         ; eax / ebx, 余数在 edx
+    mov eax, ebx
+    mov ebx, edx
+    jmp L1
+
+Done:
+    ret
+GCD ENDP
+
+; ----------------------------------------
+; 主程序 main
+; ----------------------------------------
+main PROC
+    call Clrscr
+
+    ; 示例 1: GCD(48, 18)
+    mov edx, OFFSET msg1
+    call WriteString
+
+    mov eax, 48
+    mov ebx, 18
+    call GCD
+    call WriteInt
+    call Crlf
+
+    ; 示例 2: GCD(100, 75)
+    mov edx, OFFSET msg2
+    call WriteString
+
+    mov eax, 100
+    mov ebx, 75
+    call GCD
+    call WriteInt
+    call Crlf
+
+    ; 示例 3: GCD(-42, 56)
+    mov edx, OFFSET msg3
+    call WriteString
+
+    mov eax, -42
+    mov ebx, 56
+    call GCD
+    call WriteInt
+    call Crlf
+
+    exit
+main ENDP
+
+END main
+
+```
+
+输出:
+
+```
+GCD(48, 18) = +6
+GCD(100, 75) = +25
+GCD(-42, 56) = +14
+
+C:\Users\David\source\repos\ProjectTest\Debug\ProjectTest.exe (进程 5496)已退出，代码为 0 (0x0)。
+要在调试停止时自动关闭控制台，请启用“工具”->“选项”->“调试”->“调试停止时自动关闭控制台”。
+按任意键关闭此窗口. . .
+```
+
